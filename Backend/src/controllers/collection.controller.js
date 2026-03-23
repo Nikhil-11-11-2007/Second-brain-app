@@ -1,4 +1,4 @@
-import CollectionModel from "../models/collection.model.js"
+import userCollectionModel from "../models/collection.model.js"
 
 
 export async function createCollection(req, res) {
@@ -6,7 +6,7 @@ export async function createCollection(req, res) {
     try {
         const { name, description } = req.body
 
-        const collection = await CollectionModel.create({ name, description })
+        const collection = await userCollectionModel.create({ name, description })
 
         res.status(201).json({
             message: "Collection created successfully",
@@ -21,7 +21,7 @@ export async function createCollection(req, res) {
 // ✅ Get All Collections
 export async function getCollections(req, res) {
     try {
-        const collections = await CollectionModel.find();
+        const collections = await userCollectionModel.find();
         res.status(200).json(collections);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -31,7 +31,7 @@ export async function getCollections(req, res) {
 // ✅ Get Single Collection by ID
 export async function getCollectionById(req, res) {
     try {
-        const collection = await CollectionModel.findById(req.params.id);
+        const collection = await userCollectionModel.findById(req.params.id);
         if (!collection) {
             return res.status(404).json({ error: "Collection not found" });
         }
@@ -45,7 +45,7 @@ export async function getCollectionById(req, res) {
 export async function updateCollection(req, res) {
     try {
         const { name, description } = req.body;
-        const collection = await CollectionModel.findByIdAndUpdate(
+        const collection = await userCollectionModel.findByIdAndUpdate(
             req.params.id,
             { name, description },
             { returnDocument: 'after' }
@@ -67,7 +67,7 @@ export async function updateCollection(req, res) {
 // ✅ Delete Collection
 export async function deleteCollection(req, res) {
     try {
-        const collection = await CollectionModel.findByIdAndDelete(req.params.id);
+        const collection = await userCollectionModel.findByIdAndDelete(req.params.id);
 
         if (!collection) {
             return res.status(404).json({ error: "Collection not found" });

@@ -8,15 +8,15 @@ const itemSchema = new mongoose.Schema(
         fileUrl: String,
         tags: [String],
         embedding: [Number],
-        collection: { type: mongoose.Schema.Types.ObjectId, ref: "Collection" }
+        collectionId: { type: mongoose.Schema.Types.ObjectId, ref: "UserCollections" }
     },
     { timestamps: true }
 );
 
 
-itemSchema.index({ tags: 1 });  
+itemSchema.index({ tags: 1 });
 itemSchema.index({ embedding: 1 });
 
-const itemModel =  mongoose.model("Item", itemSchema);
+const itemModel = mongoose.model("Item", itemSchema);
 
 export default itemModel;

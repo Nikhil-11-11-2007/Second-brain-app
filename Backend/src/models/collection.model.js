@@ -9,8 +9,10 @@ const collectionSchema = new mongoose.Schema({
         type: String,
         default: ""
     }
-}, { timestamps: true });
+}, { timestamps: true, suppressReservedKeysWarning: true });
 
-const CollectionModel = mongoose.model("Collection", collectionSchema)
+const userCollectionModel = mongoose.model("UserCollections", collectionSchema, "user_collections");
 
-export default CollectionModel;
+
+
+export default userCollectionModel;
