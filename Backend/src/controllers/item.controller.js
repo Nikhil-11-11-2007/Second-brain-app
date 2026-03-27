@@ -14,20 +14,29 @@ export const createItem = async (req, res) => {
 
     const tags = await generateTags(req.body.content || req.body.url);
 
-    const item = await itemModel.create({
-      ...req.body,
+    const itemData = {
+      type: req.body.type,
+      content: req.body.content,
+      url: req.body.url,
       fileUrl,
       tags,
-    });
+    };
+
+    if (req.body.collectionId) {
+      itemData.collectionId = req.body.collectionId;
+    }
+
+    const item = await itemModel.create(itemData);
 
     await addItemJob(item._id);
 
-    res.json(item); // ✅ ek hi response
+    res.json(item);
   } catch (err) {
     console.error("❌ Upload API error:", err);
     res.status(500).json({ error: "Failed to create item" });
   }
 };
+
 
 // Get all items
 export const getItems = async (req, res) => {
