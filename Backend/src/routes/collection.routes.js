@@ -1,5 +1,5 @@
 import express from "express";
-import { createCollection, getCollections, getCollectionById, updateCollection, deleteCollection } from "../controllers/collection.controller.js";
+import { createCollection, getCollections, getCollectionById, updateCollection, deleteCollection, getItemsByCollection } from "../controllers/collection.controller.js";
 
 const collectionRouter = express.Router();
 
@@ -22,5 +22,11 @@ collectionRouter.put("/:id", updateCollection)
 // method: DELETE /api/collections/:id
 // decs: deleating a collection
 collectionRouter.delete("/:id", deleteCollection)
+
+/**
+ * method: GET /api/collection/:id/items
+ * desc: finding all item in one collection
+ */
+collectionRouter.get("/:id/items", getItemsByCollection)
 
 export default collectionRouter;

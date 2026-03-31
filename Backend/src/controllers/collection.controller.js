@@ -1,7 +1,8 @@
 import userCollectionModel from "../models/collection.model.js"
+import itemModel from "../models/item.model.js"
 
 
-export async function createCollection(req, res) {
+export const createCollection = async (req, res) => {
 
     try {
         const { name, description } = req.body
@@ -19,7 +20,7 @@ export async function createCollection(req, res) {
 }
 
 // ✅ Get All Collections
-export async function getCollections(req, res) {
+export const getCollections = async (req, res) => {
     try {
         const collections = await userCollectionModel.find();
         res.status(200).json(collections);
@@ -29,7 +30,7 @@ export async function getCollections(req, res) {
 }
 
 // ✅ Get Single Collection by ID
-export async function getCollectionById(req, res) {
+export const getCollectionById = async (req, res) => {
     try {
         const collection = await userCollectionModel.findById(req.params.id);
         if (!collection) {
@@ -42,7 +43,7 @@ export async function getCollectionById(req, res) {
 }
 
 // ✅ Update Collection
-export async function updateCollection(req, res) {
+export const updateCollection = async (req, res) => {
     try {
         const { name, description } = req.body;
         const collection = await userCollectionModel.findByIdAndUpdate(
@@ -65,7 +66,7 @@ export async function updateCollection(req, res) {
 }
 
 // ✅ Delete Collection
-export async function deleteCollection(req, res) {
+export const deleteCollection = async (req, res) => {
     try {
         const collection = await userCollectionModel.findByIdAndDelete(req.params.id);
 
@@ -78,5 +79,29 @@ export async function deleteCollection(req, res) {
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+}
+
+export const getItemsByCollection = async (req, res) => {
+    try {
+
+        const items = await itemModel.find({ collectionId: req.params.id }).populate("collectionId")
+
+        if (!items || items.length === 0) {
+            return res.status(404).json({
+                error: "No items found for this collection"
+            })
+        }
+
+        res.status(200).json({
+            message: "Items featched successfully",
+            items
+        })
+
+    } catch (err) {
+        console.error("Error fetching items by collection:", err)
+        res.status(500).json({
+            error: "Server error"
+        })
     }
 }
