@@ -1,10 +1,13 @@
 import express from "express";
+import { setupDNS } from "./config/network.js";
 import cors from "cors";
 import collectionRouter from "./routes/collection.routes.js";
 import itemRouter from "./routes/item.routes.js";
 import highlightRouter from "./routes/highlight.routes.js";
 
 
+
+setupDNS();
 const app = express();
 
 // middlewares

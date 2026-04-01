@@ -5,17 +5,17 @@ import { createItem, deleteItem, getItemById, getItems, getRelatedItems, getResu
 const upload = multer();
 const itemRouter = express.Router();
 
+
 itemRouter.post("/", upload.single("file"), createItem);
-itemRouter.get("/", getItems);
-itemRouter.get("/:id", getItemById)
-itemRouter.put("/:id", updateItem)
-itemRouter.delete("/:id", deleteItem)
 
 // Advance features
-
 itemRouter.get("/search", searchItems)
 itemRouter.get("/:id/related", getRelatedItems)
 itemRouter.get("/resurface", getResurfacedItems)
 
+itemRouter.get("/", getItems);
+itemRouter.get("/:id", getItemById)
+itemRouter.put("/:id", updateItem)
+itemRouter.delete("/:id", deleteItem)
 
 export default itemRouter;

@@ -2,7 +2,7 @@ import "dotenv/config";
 import Redis from "ioredis";
 
 const redis = new Redis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,   // 👈 BullMQ ke liye required
+  maxRetriesPerRequest: null,
 });
 
 redis.on("connect", () => {

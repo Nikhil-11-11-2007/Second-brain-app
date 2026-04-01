@@ -1,12 +1,17 @@
 import itemModel from "../models/item.model.js";
-import { addItemJob } from "../queue/item.queue.js";
+import { addItemJob, itemQueue } from "../queue/item.queue.js";
 import { uploadFile } from "../services/storage.service.js";
 import { generateTags } from "../services/ai.service.js";
+import { cosineSimilarity, generateEmbedding } from "../services/vector.service.js";
 
 // Create Item
 export const createItem = async (req, res) => {
   try {
     let fileUrl = "";
+
+    if (!req.body.type) {
+      return res.status(400).json({ error: "Type is required" });
+    }
 
     if (req.file) {
       fileUrl = await uploadFile(req.file);
@@ -36,7 +41,6 @@ export const createItem = async (req, res) => {
     res.status(500).json({ error: "Failed to create item" });
   }
 };
-
 
 // Get all items
 export const getItems = async (req, res) => {
@@ -74,7 +78,7 @@ export const deleteItem = async (req, res) => {
     }
 
     // 2. Redis se direct job delete 🚀
-    await itemQueue.removeJobs(id);
+    await itemQueue.remove(id);
 
     res.json({ message: "Item + job deleted successfully" });
   } catch (err) {
@@ -85,16 +89,57 @@ export const deleteItem = async (req, res) => {
 
 // Search items (semantic + keyword)
 export const searchItems = async (req, res) => {
-  const { q } = req.query;
-  // TODO: implement vector + text search
-  res.json({ message: `Search results for ${q}` });
+  try {
+    const { q } = req.query;
+
+    if (!q) {
+      return res.status(400).json({ error: "Query required" });
+    }
+
+    const queryEmbedding = await generateEmbedding(q);
+
+    const items = await itemModel.find();
+
+    const results = items.map(item => ({
+      item,
+      score: item.embedding?.length ? cosineSimilarity(queryEmbedding, item.embedding) : 0
+    }));
+
+    const sorted = results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+    res.json(sorted);
+  } catch (err) {
+    res.status(500).json({ error: "Search failed" });
+  }
 };
 
 // Related items
 export const getRelatedItems = async (req, res) => {
-  const { id } = req.params;
-  // TODO: implement embedding similarity
-  res.json({ message: `Related items for ${id}` });
+  try {
+    const { id } = req.params;
+
+    const current = await itemModel.findById(id);
+    if (!current) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const items = await itemModel.find({ _id: { $ne: id } });
+
+    const related = items.map(item => ({
+      item,
+      score: item.embedding?.length ? cosineSimilarity(current.embedding, item.embedding) : 0
+    }));
+
+    const sorted = related
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    res.json(sorted);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to get related items" });
+  }
 };
 
 // Resurfacing
