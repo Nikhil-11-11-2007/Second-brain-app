@@ -1,15 +1,113 @@
-export const generateEmbedding = async (text = "") => {
-    return Array(128)
-        .fill(0)
-        .map((_, i) => text.length % (i + 1));
+import { pipeline } from "@xenova/transformers";
+import { Pinecone } from "@pinecone-database/pinecone";
+import "dotenv/config";
+
+// Singleton embedder
+let embedderInstance = null;
+
+const getEmbedder = async () => {
+  if (!embedderInstance) {
+    embedderInstance = await pipeline(
+      "feature-extraction",
+      "Xenova/e5-small-v2"
+    );
+  }
+  return embedderInstance;
 };
 
-export const cosineSimilarity = (a = [], b = []) => {
-    if (a.length !== b.length || a.length === 0) return 0;
+// Pinecone setup
+const pinecone = new Pinecone({
+  apiKey: process.env.PINECONE_API_KEY,
+});
 
-    const dot = a.reduce((sum, val, i) => sum + val * b[i], 0);
-    const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-    const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+const index = pinecone.Index(process.env.PINECONE_INDEX);
 
-    return dot / (magA * magB);
+// Embedding function
+export const generateEmbedding = async (text = "") => {
+  try {
+    if (!text || !text.trim()) return [];
+
+    const embedder = await getEmbedder();
+    const output = await embedder(`passage: ${text}`);
+
+    let embedding;
+
+    // CASE: flattened vector
+    if (output?.data instanceof Float32Array) {
+      const flat = Array.from(output.data);
+      const DIM = 384;
+
+      if (flat.length % DIM !== 0) return [];
+
+      const tokens = flat.length / DIM;
+      const pooled = new Array(DIM).fill(0);
+
+      for (let i = 0; i < tokens; i++) {
+        for (let j = 0; j < DIM; j++) {
+          pooled[j] += flat[i * DIM + j];
+        }
+      }
+
+      embedding = pooled.map(val => val / tokens);
+    }
+
+    // CASE: nested array
+    else if (Array.isArray(output?.data) && Array.isArray(output.data[0])) {
+      const tokens = output.data.length;
+      const dims = output.data[0].length;
+      const pooled = new Array(dims).fill(0);
+
+      for (let i = 0; i < tokens; i++) {
+        for (let j = 0; j < dims; j++) {
+          pooled[j] += output.data[i][j];
+        }
+      }
+
+      embedding = pooled.map(val => val / tokens);
+    }
+
+    else {
+      return [];
+    }
+
+    // Clean NaN
+    return embedding.map(val => (isNaN(val) ? 0 : Number(val)));
+  } catch {
+    return [];
+  }
+};
+
+// Save to Pinecone
+export const saveToPinecone = async (itemId, embedding, metadata = {}) => {
+  if (!embedding || embedding.length === 0) return;
+
+  await index.upsert({
+    records: [
+      {
+        id: String(itemId),
+        values: embedding,
+        metadata: metadata || {},
+      },
+    ],
+  });
+};
+
+// Query
+export const queryRelatedItems = async (embedding) => {
+  if (!embedding.length) return [];
+
+  const result = await index.query({
+    vector: embedding,
+    topK: 5,
+    includeMetadata: true,
+  });
+
+  return result.matches || [];
+};
+
+// Delete
+export const deleteVector = async (itemId) => {
+  await index.delete({
+    ids: [itemId.toString()],
+  });
 };

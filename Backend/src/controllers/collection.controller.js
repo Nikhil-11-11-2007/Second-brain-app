@@ -105,3 +105,25 @@ export const getItemsByCollection = async (req, res) => {
         })
     }
 }
+
+export const getCollectionWithStats = async (req, res) => {
+  try {
+    const collection = await userCollectionModel.findById(req.params.id);
+
+    const items = await itemModel.find({ collectionId: req.params.id });
+
+    const totalItems = items.length;
+
+    const allTags = items.flatMap(i => i.tags || []);
+    const uniqueTags = [...new Set(allTags)];
+
+    res.json({
+      collection,
+      totalItems,
+      tags: uniqueTags,
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
