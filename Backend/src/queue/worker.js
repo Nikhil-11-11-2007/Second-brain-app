@@ -21,12 +21,53 @@ const worker = new Worker(
       const item = await itemModel.findById(job.data.itemId);
       if (!item) throw new Error("Item not found in MongoDB");
 
-      const text = `
-        ${item.type || ""}
-        ${item.content || ""}
-        ${item.url || ""}
-        ${item.tags?.join(" ") || ""}
-      `;
+      let text = "";
+
+if (item.type === "video") {
+  text = `
+    Video Title: ${item.content}
+    URL: ${item.url}
+    Tags: ${(item.tags || []).join(", ")}
+  `;
+}
+
+else if (item.type === "article") {
+  text = `
+    Article: ${item.content}
+    URL: ${item.url}
+    Tags: ${(item.tags || []).join(", ")}
+  `;
+}
+
+else if (item.type === "image") {
+  text = `
+    Image description: ${item.content || "No description"}
+    Tags: ${(item.tags || []).join(", ")}
+  `;
+}
+
+else if (item.type === "pdf") {
+  text = `
+    PDF Title: ${item.content}
+    Tags: ${(item.tags || []).join(", ")}
+  `;
+}
+
+else if (item.type === "product") {
+  text = `
+    Product: ${item.content}
+    Description: ${item.description || ""}
+    Tags: ${(item.tags || []).join(", ")}
+  `;
+}
+
+// fallback
+if (!text.trim()) {
+  text = `${item.content || "No content"} ${(item.tags || []).join(", ")}`;
+}
+
+// clean
+text = text.replace(/\s+/g, " ").trim();
 
       const embedding = await generateEmbedding(text);
 

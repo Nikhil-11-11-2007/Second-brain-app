@@ -8,6 +8,8 @@ const itemSchema = new mongoose.Schema(
         fileUrl: String,
         tags: [String],
         embedding: [Number],
+        description: String,
+        thumbnail: String,
         collectionId: { type: mongoose.Schema.Types.ObjectId, ref: "UserCollections" }
     },
     { timestamps: true }

@@ -19,8 +19,10 @@ export const createItem = async (req, res) => {
       fileUrl = await uploadFile(req.file);
     }
 
-    // 🔥 Better text for AI
-    const baseText = `${req.body.content || ""} ${req.body.url || ""}`;
+    const baseText = `
+                    Title: ${req.body.content || ""}
+                    URL: ${req.body.url || ""}
+                  `;
 
     const aiData = await generateTagsAndDescription(baseText);
 
@@ -29,6 +31,7 @@ export const createItem = async (req, res) => {
       content: req.body.content,
       url: req.body.url,
       fileUrl,
+      thumbnail: req.body.thumbnail || "",
       tags: aiData.tags,
       description: aiData.description,
     };
@@ -197,7 +200,7 @@ export const getRelatedItems = async (req, res) => {
 export const getResurfacedItems = async (req, res) => {
   try {
     const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - 2);
+    cutoff.setMinutes(cutoff.getMinutes() - 1);
 
     const items = await itemModel.aggregate([
       {
