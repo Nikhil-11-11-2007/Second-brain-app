@@ -1,4 +1,5 @@
 import itemModel from "../models/item.model.js";
+import mongoose from "mongoose";
 import { addItemJob, itemQueue } from "../queue/item.queue.js";
 import { uploadFile } from "../services/storage.service.js";
 import { generateTagsAndDescription } from "../services/ai.service.js";
@@ -34,6 +35,7 @@ export const createItem = async (req, res) => {
       thumbnail: req.body.thumbnail || "",
       tags: aiData.tags,
       description: aiData.description,
+      userId: new mongoose.Types.ObjectId(req.user.id)
     };
 
     if (req.body.collectionId) {
@@ -42,10 +44,8 @@ export const createItem = async (req, res) => {
 
     const item = await itemModel.create(itemData);
 
-    // 🔥 async embedding job
     await addItemJob(item._id);
 
-    // 🔥 collection tag update (FIXED POSITION)
     if (item.collectionId) {
       const collection = await userCollectionModel.findById(item.collectionId);
 
@@ -61,7 +61,6 @@ export const createItem = async (req, res) => {
       }
     }
 
-    // ✅ RESPONSE LAST
     res.status(201).json(item);
 
   } catch (err) {
@@ -73,7 +72,9 @@ export const createItem = async (req, res) => {
 // Get all items
 export const getItems = async (req, res) => {
   try {
-    const items = await itemModel.find().populate("collectionId");
+    const items = await itemModel.find({
+      userId: new mongoose.Types.ObjectId(req.user.id)
+    }).populate("collectionId");
     res.json(items);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch items" });
@@ -83,7 +84,10 @@ export const getItems = async (req, res) => {
 // Get single item
 export const getItemById = async (req, res) => {
   try {
-    const item = await itemModel.findById(req.params.id).populate("collectionId");
+    const item = await itemModel.findOne({
+      _id: req.params.id,
+      userId: new mongoose.Types.ObjectId(req.user.id)
+    }).populate("collectionId")
 
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
@@ -98,9 +102,14 @@ export const getItemById = async (req, res) => {
 // Update item
 export const updateItem = async (req, res) => {
   try {
-    const item = await itemModel.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const item = await itemModel.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        userId: new mongoose.Types.ObjectId(req.user.id)
+      },
+      req.body,
+      { new: true }
+    );
 
     if (!item) {
       return res.status(404).json({ error: "Item not found" });
@@ -117,19 +126,20 @@ export const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedItem = await itemModel.findByIdAndDelete(id);
+    const deletedItem = await itemModel.findOneAndDelete({
+      _id: id,
+      userId: new mongoose.Types.ObjectId(req.user.id)
+    });
 
     if (!deletedItem) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    // 🔥 Remove BullMQ job safely
     const job = await Job.fromId(itemQueue, id);
     if (job) {
       await job.remove();
     }
 
-    // 🔥 Remove from Pinecone
     await deleteVector(id);
 
     res.json({ message: "Item + job + vector deleted successfully" });
@@ -150,7 +160,10 @@ export const searchItems = async (req, res) => {
 
     const queryEmbedding = await generateEmbedding(`query: ${q}`);
 
-    const matches = await queryRelatedItems(queryEmbedding);
+    const matches = await queryRelatedItems(
+      queryEmbedding,
+      req.user.id
+    );
 
     const results = matches.map((m) => ({
       id: m.id,
@@ -170,7 +183,10 @@ export const getRelatedItems = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const current = await itemModel.findById(id);
+    const current = await itemModel.findOne({
+      _id: id,
+      userId: new mongoose.Types.ObjectId(req.user.id)
+    });
 
     if (!current || !current.embedding?.length) {
       return res.status(404).json({
@@ -178,9 +194,11 @@ export const getRelatedItems = async (req, res) => {
       });
     }
 
-    const matches = await queryRelatedItems(current.embedding);
+    const matches = await queryRelatedItems(
+      current.embedding,
+      req.user.id
+    );
 
-    // 🔥 remove self
     const filtered = matches.filter((m) => m.id !== id);
 
     const results = filtered.map((m) => ({
@@ -200,12 +218,13 @@ export const getRelatedItems = async (req, res) => {
 export const getResurfacedItems = async (req, res) => {
   try {
     const cutoff = new Date();
-    cutoff.setMinutes(cutoff.getMinutes() - 1);
+    cutoff.setMinutes(cutoff.getMinutes() - 2);
 
     const items = await itemModel.aggregate([
       {
         $match: {
-          createdAt: { $lte: cutoff },
+          userId: new mongoose.Types.ObjectId(req.user.id),
+          createdAt: { $lte: cutoff }
         },
       },
       { $sample: { size: 10 } }

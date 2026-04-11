@@ -10,11 +10,22 @@ const itemSchema = new mongoose.Schema(
         embedding: [Number],
         description: String,
         thumbnail: String,
-        collectionId: { type: mongoose.Schema.Types.ObjectId, ref: "UserCollections" }
+
+        collectionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "UserCollections"
+        },
+
+        // 🔥 ADD THIS (MOST IMPORTANT)
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        }
+
     },
     { timestamps: true }
 );
-
 
 itemSchema.index({ tags: 1 });
 itemSchema.index({ embedding: 1 });

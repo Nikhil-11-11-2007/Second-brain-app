@@ -93,21 +93,28 @@ export const saveToPinecone = async (itemId, embedding, metadata = {}) => {
 };
 
 // Query
-export const queryRelatedItems = async (embedding) => {
+export const queryRelatedItems = async (embedding, userId) => {
   if (!embedding.length) return [];
 
   const result = await index.query({
     vector: embedding,
     topK: 5,
     includeMetadata: true,
+
+    // 🔥 ADD THIS
+    filter: {
+      userId: userId.toString()
+    }
   });
 
   return result.matches || [];
 };
 
 // Delete
-export const deleteVector = async (itemId) => {
-  await index.delete({
-    ids: [itemId.toString()],
+export const deleteVector = async (ids = []) => {
+  if (!ids.length) return;
+
+  await index.deleteMany({
+    ids: ids
   });
 };

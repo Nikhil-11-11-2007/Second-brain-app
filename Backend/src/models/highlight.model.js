@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const highlightSchema = new mongoose.Schema(
     {
-        // ✅ consistent naam use karo (itemId)
         itemId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Item",
@@ -14,20 +13,17 @@ const highlightSchema = new mongoose.Schema(
             required: true,
         },
 
-        // 🔥 AI fields
-        tags: [
-            {
-                type: String,
-            },
-        ],
+        tags: [String],
+        description: String,
 
-        description: {
-            type: String,
-        },
+        // 🔥 ADD THIS
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        }
     },
-    {
-        timestamps: true, // 🔥 createdAt, updatedAt
-    }
+    { timestamps: true }
 );
 
 const highlightModel = mongoose.model("Highlight", highlightSchema);

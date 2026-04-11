@@ -9,7 +9,6 @@ export const createHighlight = async (req, res) => {
       return res.status(400).json({ error: "Text is required" });
     }
 
-    // 🔥 AI processing
     const aiData = await generateTagsAndDescription(text);
 
     const data = await highlightModel.create({
@@ -17,6 +16,7 @@ export const createHighlight = async (req, res) => {
       itemId,
       tags: aiData.tags,
       description: aiData.description,
+      userId: req.user.id
     });
 
     res.json(data);
