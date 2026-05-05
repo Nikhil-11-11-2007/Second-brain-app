@@ -11,20 +11,20 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Second Brain</h1>
-          <p className="text-slate-400">Sign in to your account</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Second Brain</h1>
+          <p className="text-gray-600">Sign in to your account</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-8">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
               <input
@@ -33,13 +33,13 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -49,12 +49,12 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 transition"
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
@@ -72,16 +72,16 @@ const Login = () => {
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">
-            <div className="flex-1 h-px bg-slate-700"></div>
-            <span className="text-sm text-slate-500">New here?</span>
-            <div className="flex-1 h-px bg-slate-700"></div>
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="text-sm text-gray-600">New here?</span>
+            <div className="flex-1 h-px bg-gray-300"></div>
           </div>
 
           {/* Sign Up Link */}
           <div className="text-center">
-            <p className="text-slate-400 text-sm">
+            <p className="text-gray-700 text-sm">
               Don't have an account?{' '}
-              <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition">
+              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition">
                 Sign up
               </a>
             </p>
@@ -89,7 +89,7 @@ const Login = () => {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-slate-500 text-xs mt-8">
+        <p className="text-center text-gray-600 text-xs mt-8">
           By signing in, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>
